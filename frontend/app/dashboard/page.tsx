@@ -160,10 +160,7 @@ export default function Dashboard() {
                     <div className="glass-card">
                         <h3 className="text-xl font-bold mb-6">Asset Allocation</h3>
                         <div className="space-y-6">
-                            {(stats?.allocation || [
-                                { name: 'Bitcoin', symbol: 'BTC', color: 'bg-orange-500', value: '45%' },
-                                { name: 'Ethereum', symbol: 'ETH', color: 'bg-blue-500', value: '30%' },
-                            ]).map((asset: any) => (
+                            {(stats?.allocation || []).map((asset: any) => (
                                 <div key={asset.symbol}>
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-2">
