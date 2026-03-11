@@ -14,6 +14,7 @@ export default function Dashboard() {
     const [stats, setStats] = useState<any>(null);
     const [trades, setTrades] = useState<any[]>([]);
     const [botActive, setBotActive] = useState(false);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     const getAuthHeaders = () => {
