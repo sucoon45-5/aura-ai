@@ -10,8 +10,13 @@ engine = create_engine(
     pool_pre_ping=True,
     # pool_recycle=3600 prevents stale connections by recycling them hourly
     pool_recycle=3600,
-    # "check_same_thread" is only needed for SQLite
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
+    # SSL configuration for production (PostgreSQL)
+    # Render's external database URL requires sslmode=require
+    connect_args={
+        "check_same_thread": False
+    } if "sqlite" in settings.DATABASE_URL else {
+        "sslmode": "require"
+    }
 )
 
 # Create a session factory

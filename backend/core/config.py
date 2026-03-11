@@ -28,6 +28,10 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Add diagnostic logging for production
+db_host = settings.DATABASE_URL.split("@")[-1].split("/")[0] if "@" in settings.DATABASE_URL else "localhost"
+print(f"DATABASE DIAGNOSTIC: Connecting to host: {db_host}")
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
