@@ -6,6 +6,10 @@ from backend.core.config import settings
 # For production (PostgreSQL), make sure the DATABASE_URL is set correctly in .env
 engine = create_engine(
     settings.DATABASE_URL,
+    # pool_pre_ping=True checks connection health before use (crucial for Render/Heroku)
+    pool_pre_ping=True,
+    # pool_recycle=3600 prevents stale connections by recycling them hourly
+    pool_recycle=3600,
     # "check_same_thread" is only needed for SQLite
     connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 )
