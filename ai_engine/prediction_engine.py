@@ -4,8 +4,8 @@ import os
 import pandas as pd
 import numpy as np
 from xgboost import XGBClassifier
-from data_collector import DataCollector
-from indicators import TechnicalIndicators
+from .data_collector import DataCollector
+from .indicators import TechnicalIndicators
 
 class PredictionEngine:
     def __init__(self, model_path='ai_engine/models/trend_model.pkl'):

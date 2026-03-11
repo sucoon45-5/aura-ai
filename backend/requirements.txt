@@ -10,3 +10,5 @@ python-multipart
 cryptography
 python-dotenv
 pandas
+numpy
+xgboost
