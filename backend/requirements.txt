@@ -7,3 +7,5 @@ passlib[bcrypt]
 pydantic-settings
 psycopg2-binary
 python-multipart
+cryptography
+python-dotenv
