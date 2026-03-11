@@ -1,58 +1,31 @@
-# Implementation Plan - AI-Powered Trading Platform
+# Core Feature Integration Plan
 
-Build a comprehensive AI-driven trading platform for Forex, Crypto, and Meme Coins with automated execution and advanced risk management.
+Now that Aura AI is deployed, we will transition it from a mock-based prototype to a functional trading platform by integrating the AI engine and a persistent database.
 
 ## Proposed Changes
 
-### Project Structure
-- `frontend/`: Next.js (React) application with TailwindCSS for the user interface.
-- `backend/`: FastAPI (Python) service for API logic, user management, and trade execution.
-- `ai_engine/`: Python-based module for market analysis, sentiment tracking, and prediction models.
-- `docker-compose.yml`: Local development environment setup (PostgreSQL, Redis, RabbitMQ).
+### Backend: Database Layer
+- Implement `backend/database.py` to handle SQLAlchemy engine and sessions.
+- Un-comment and refine models in [backend/models/schemas.py](file:///c:/Users/User/AI/backend/models/schemas.py).
+- Integrate DB dependency into routes.
 
----
+### AI Engine: Signals Integration
+- Update [backend/main.py](file:///c:/Users/User/AI/backend/main.py) to include a `/api/ai/predict/{symbol}` endpoint.
+- Connect the frontend "AI Signals" page to this endpoint.
 
-### [Component] Backend (FastAPI)
-The backend will handle business logic, authentication, and integration with external APIs.
-- #### [NEW] `backend/main.py` (file:///c:/Users/User/AI/backend/main.py)
-  Entry point for the FastAPI application.
-- #### [NEW] `backend/models/` (file:///c:/Users/User/AI/backend/models/)
-  SQLAlchemy models for User, APIKey, Trade, Signal, and Prediction.
-- #### [NEW] `backend/services/execution_engine.py` (file:///c:/Users/User/AI/backend/services/execution_engine.py)
-  Core logic for interacting with Binance and MetaTrader APIs.
-- #### [NEW] `backend/services/risk_manager.py` (file:///c:/Users/User/AI/backend/services/risk_manager.py)
-  Automated stop-loss, take-profit, and daily loss limit checks.
+### Trading Bot: Live Control
+- Integrate [TradingCoordinator](file:///c:/Users/User/AI/backend/services/trading_coordinator.py#7-58) into the FastAPI app state.
+- Create endpoints to toggle auto-trading and view status.
 
----
-
-### [Component] Frontend (Next.js)
-A modern, responsive dashboard for users to monitor their portfolio and AI signals.
-- #### [NEW] `frontend/components/Dashboard/` (file:///c:/Users/User/AI/frontend/components/Dashboard/)
-  Interactive charts and real-time data widgets.
-- #### [NEW] `frontend/components/Signals/` (file:///c:/Users/User/AI/frontend/components/Signals/)
-  Feed of AI-generated buy/sell/hold signals.
-- #### [NEW] `frontend/pages/index.tsx` (file:///c:/Users/User/AI/frontend/pages/index.tsx)
-  Main dashboard landing page.
-
----
-
-### [Component] AI Engine
-Dedicated module for data processing and machine learning.
-- #### [NEW] `ai_engine/data_collector.py` (file:///c:/Users/User/AI/ai_engine/data_collector.py)
-  Fetches historical and real-time data from Binance, CoinGecko, and Social Media (X/Reddit).
-- #### [NEW] `ai_engine/models/lstm_model.py` (file:///c:/Users/User/AI/ai_engine/models/lstm_model.py)
-  Long Short-Term Memory model for price trend prediction.
-- #### [NEW] `ai_engine/sentiment_analyzer.py` (file:///c:/Users/User/AI/ai_engine/sentiment_analyzer.py)
-  Natural Language Processing (NLP) for social media signals.
+### Frontend: Production Readiness
+- Replace hardcoded `http://localhost:8000` with an environment variable `NEXT_PUBLIC_API_URL`.
 
 ## Verification Plan
 
 ### Automated Tests
-- `pytest` for backend logic and AI model validation.
-- `jest` + `react-testing-library` for frontend components.
-- Integration tests simulating trade execution using Binance Testnet.
+- Run `pytest` on the `ai_engine` to ensure predictions still work with real data.
+- Add integration tests for the new API endpoints.
 
 ### Manual Verification
-- Visual inspection of the dashboard responsiveness.
-- Verification of 2FA flow during user registration.
-- Manual trigger of "Emergency Stop" to ensure all trades are halted.
+1. Open the "AI Signals" page and verify it displays predictions based on live market data.
+2. Toggle the "Start Live Trading" button and verify the status update.

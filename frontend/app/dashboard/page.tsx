@@ -6,13 +6,36 @@ import TradeCard from '@/components/TradeCard';
 import PerformanceChart from '@/components/PerformanceChart';
 import { Zap, Bell, Search, Plus } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState('crypto');
     const [stats, setStats] = useState<any>(null);
     const [trades, setTrades] = useState<any[]>([]);
+    const [botActive, setBotActive] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const fetchBotStatus = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/bot/status/1`);
+            const data = await res.json();
+            setBotActive(data.is_auto_trading);
+        } catch (err) {
+            console.error("Failed to fetch bot status");
+        }
+    };
+
+    const toggleBot = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/bot/toggle/1?status=${!botActive}`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            setBotActive(data.status);
+        } catch (err) {
+            console.error("Failed to toggle bot");
+        }
+    };
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -25,6 +48,7 @@ export default function Dashboard() {
                 const tradesData = await tradesRes.json();
                 setTrades(tradesData);
 
+                await fetchBotStatus();
                 setLoading(false);
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
@@ -135,17 +159,26 @@ export default function Dashboard() {
                         </button>
                     </div>
                 </div>
-                <div className="bg-accent/10 border border-accent/20 rounded-2xl p-6 mb-10 flex items-center justify-between">
+                <div className={`border rounded-2xl p-6 mb-10 flex items-center justify-between transition-all ${botActive ? 'bg-success/10 border-success/20' : 'bg-accent/10 border-accent/20'}`}>
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center animate-pulse">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${botActive ? 'bg-success animate-pulse' : 'bg-accent'}`}>
                             <Zap className="text-white" size={24} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-lg">New AI Signal: PEPE/USDT</h3>
-                            <p className="text-sm text-accent font-medium">Moonshot probability detected: 94% confidence</p>
+                            <h3 className="font-bold text-lg">
+                                {botActive ? 'Automated Trading Bot is LIVE' : 'AI Trading Bot is READY'}
+                            </h3>
+                            <p className={`text-sm font-medium ${botActive ? 'text-success' : 'text-accent'}`}>
+                                {botActive ? 'Executing high-probability trades across 250+ pairs' : 'Click start to enable AI-powered automated trading'}
+                            </p>
                         </div>
                     </div>
-                    <button className="btn-primary">View Analysis</button>
+                    <button
+                        onClick={toggleBot}
+                        className={`btn-primary px-8 ${botActive ? 'bg-danger hover:bg-danger/80 border-danger/20 shadow-danger/20' : ''}`}
+                    >
+                        {botActive ? 'Stop Trading Bot' : 'Start Live Trading'}
+                    </button>
                 </div>
 
                 {/* Tabs & Trades */}
