@@ -1,6 +1,17 @@
 {
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm install",
-  "framework": "nextjs"
+    "version": 2,
+    "public": true,
+    "name": "aura-ai-frontend",
+    "builds": [
+        {
+            "src": "frontend/package.json",
+            "use": "@vercel/next"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "frontend/$1"
+        }
+    ]
 }
