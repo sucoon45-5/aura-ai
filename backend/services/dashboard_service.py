@@ -7,24 +7,37 @@ class DashboardService:
         """Calculate real-time portfolio stats using live prices."""
         exchange = ccxt.binance()
         try:
-            # In a real app, this would query the DB for user holdings
-            # For now, we calculate based on a set of common assets
-            btc_price = exchange.fetch_ticker('BTC/USDT')['last']
-            eth_price = exchange.fetch_ticker('ETH/USDT')['last']
-            
             # Simulated holdings
             btc_amount = 1.2
             eth_amount = 15.0
-            usdt_balance = 12000.0
+            usdt_balance = 12500.0
             
-            portfolio_value = (btc_amount * btc_price) + (eth_amount * eth_price) + usdt_balance
+            # Fetch live prices
+            btc_price = exchange.fetch_ticker('BTC/USDT')['last']
+            eth_price = exchange.fetch_ticker('ETH/USDT')['last']
+            
+            btc_value = btc_amount * btc_price
+            eth_value = eth_amount * eth_price
+            total_value = btc_value + eth_value + usdt_balance
+            
+            # Use yesterday's mock base for trend comparison
+            yesterday_value = total_value * 0.965 # Mock -3.5% drift for demo trend
+            profit_24h = total_value - yesterday_value
+            profit_pct = (profit_24h / yesterday_value) * 100
             
             return {
-                "portfolio_value": round(portfolio_value, 2),
-                "total_profit_24h": round(portfolio_value * 0.035, 2), # 3.5% mock 24h profit for demo
-                "active_trades": 4,
-                "ai_confidence_avg": 88,
-                "trend": "up" if portfolio_value > 120000 else "down"
+                "portfolio_value": round(total_value, 2),
+                "total_profit_24h": round(profit_24h, 2),
+                "profit_pct_24h": round(profit_pct, 2),
+                "active_trades": 2,
+                "ai_confidence_avg": 92,
+                "trend": "up" if profit_pct > 0 else "down",
+                "allocation": [
+                    {"name": "Bitcoin", "symbol": "BTC", "value": f"{round((btc_value/total_value)*100)}%", "color": "bg-orange-500"},
+                    {"name": "Ethereum", "symbol": "ETH", "value": f"{round((eth_value/total_value)*100)}%", "color": "bg-blue-500"},
+                    {"name": "Stablecoins", "symbol": "USDT", "value": f"{round((usdt_balance/total_value)*100)}%", "color": "bg-success"},
+                    {"name": "Others", "symbol": "Misc", "value": "1%", "color": "bg-muted"},
+                ]
             }
         except Exception as e:
             print(f"Error fetching dashboard stats: {e}")

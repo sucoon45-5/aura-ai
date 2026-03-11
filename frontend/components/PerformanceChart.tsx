@@ -13,6 +13,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -31,7 +33,12 @@ const PerformanceChart = () => {
     useEffect(() => {
         const fetchPerformanceData = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/dashboard/performance');
+                const token = localStorage.getItem('aura_token');
+                const response = await fetch(`${API_BASE_URL}/dashboard/performance`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) throw new Error('Failed to fetch performance data');
                 const data = await response.json();
 

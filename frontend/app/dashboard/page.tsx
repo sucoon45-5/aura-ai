@@ -129,16 +129,16 @@ export default function Dashboard() {
                         label="Portfolio Value"
                         value={`$${stats?.portfolio_value?.toLocaleString() || '---'}`}
                         trend={stats?.trend || 'up'}
-                        trendValue="12.4%"
+                        trendValue={`${stats?.profit_pct_24h || '0'}%`}
                     />
                     <StatCard
                         label="Total Profit (24h)"
                         value={`+$${stats?.total_profit_24h?.toLocaleString() || '0.00'}`}
                         trend="up"
-                        trendValue="5.2%"
+                        trendValue="Live"
                     />
                     <StatCard label="Active Trades" value={stats?.active_trades?.toString() || '0'} />
-                    <StatCard label="AI Confidence Avg" value={`${stats?.ai_confidence_avg || '0'}%`} trend="up" trendValue="2%" />
+                    <StatCard label="AI Confidence Avg" value={`${stats?.ai_confidence_avg || '0'}%`} trend="up" trendValue="High" />
                 </div>
 
                 {/* Main Content Grid */}
@@ -160,12 +160,10 @@ export default function Dashboard() {
                     <div className="glass-card">
                         <h3 className="text-xl font-bold mb-6">Asset Allocation</h3>
                         <div className="space-y-6">
-                            {[
+                            {(stats?.allocation || [
                                 { name: 'Bitcoin', symbol: 'BTC', color: 'bg-orange-500', value: '45%' },
                                 { name: 'Ethereum', symbol: 'ETH', color: 'bg-blue-500', value: '30%' },
-                                { name: 'Solana', symbol: 'SOL', color: 'bg-purple-500', value: '15%' },
-                                { name: 'Others', symbol: 'Misc', color: 'bg-muted', value: '10%' },
-                            ].map((asset) => (
+                            ]).map((asset: any) => (
                                 <div key={asset.symbol}>
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-2">

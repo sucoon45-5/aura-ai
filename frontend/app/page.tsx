@@ -8,9 +8,13 @@ export default function Home() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-success/10 rounded-full blur-[120px] pointer-events-none" />
 
       <nav className="fixed top-0 w-full p-6 flex justify-between items-center z-50">
-        <div className="text-2xl font-bold tracking-tighter flex items-center gap-2">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-            <div className="w-4 h-4 bg-white rounded-sm rotate-45" />
+        <div className="text-2xl font-bold tracking-tighter flex items-center gap-3">
+          <div className="w-10 h-10 relative overflow-hidden rounded-xl border border-card-border">
+            <img
+              src="/logo.png"
+              alt="Aura AI Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           Aura AI
         </div>
