@@ -1,10 +1,58 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Github, Mail, ArrowRight, Zap, Shield, Globe } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Github, Mail, ArrowRight, Zap, Shield, Globe, Loader2 } from 'lucide-react';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function LoginPage() {
     const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const router = useRouter();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            if (mode === 'register') {
+                const res = await fetch(`${API_BASE_URL.replace('/api', '')}/auth/register?email=${email}&password=${password}`, {
+                    method: 'POST',
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Registration failed');
+
+                // On success, switch to login
+                setMode('login');
+                setError('Registration successful! Please sign in.');
+            } else {
+                // Login uses OAuth2 form data format
+                const formData = new FormData();
+                formData.append('username', email); // OAuth2 uses 'username' for email
+                formData.append('password', password);
+
+                const res = await fetch(`${API_BASE_URL.replace('/api', '')}/auth/login`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Login failed');
+
+                // Store token and redirect
+                localStorage.setItem('aura_token', data.access_token);
+                router.push('/dashboard');
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="flex min-h-screen bg-background">
@@ -73,13 +121,22 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    <div className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="bg-danger/10 border border-danger/20 text-danger text-xs font-bold p-3 rounded-lg">
+                                {error}
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <label className="text-[10px] uppercase font-black text-muted tracking-widest pl-1">Email Address</label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-accent transition-colors" size={18} />
                                 <input
                                     type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Enter your email"
                                     className="w-full bg-card border border-card-border rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-accent transition-all font-medium"
                                 />
@@ -89,20 +146,33 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <label className="text-[10px] uppercase font-black text-muted tracking-widest">Password</label>
-                                {mode === 'login' && <button className="text-[10px] font-bold text-muted hover:text-accent transition-colors">Forgot Password?</button>}
+                                {mode === 'login' && <button type="button" className="text-[10px] font-bold text-muted hover:text-accent transition-colors">Forgot Password?</button>}
                             </div>
                             <input
                                 type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 placeholder="****************"
                                 className="w-full bg-card border border-card-border rounded-xl px-4 py-3.5 outline-none focus:border-accent transition-all font-medium"
                             />
                         </div>
 
-                        <Link href="/dashboard" className="btn-primary w-full flex items-center justify-center gap-2 group py-4">
-                            <span>{mode === 'login' ? 'Continue to Dashboard' : 'Create My Account'}</span>
-                            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="btn-primary w-full flex items-center justify-center gap-2 group py-4 disabled:opacity-50"
+                        >
+                            {loading ? (
+                                <Loader2 size={20} className="animate-spin" />
+                            ) : (
+                                <>
+                                    <span>{mode === 'login' ? 'Continue to Dashboard' : 'Create My Account'}</span>
+                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-card-border"></div></div>

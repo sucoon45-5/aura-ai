@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import StatCard from '@/components/StatCard';
 import TradeCard from '@/components/TradeCard';
@@ -13,11 +14,22 @@ export default function Dashboard() {
     const [stats, setStats] = useState<any>(null);
     const [trades, setTrades] = useState<any[]>([]);
     const [botActive, setBotActive] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('aura_token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    };
 
     const fetchBotStatus = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/bot/status/1`);
+            const res = await fetch(`${API_BASE_URL}/bot/status/1`, {
+                headers: getAuthHeaders()
+            });
+            if (res.status === 401) return router.push('/login');
             const data = await res.json();
             setBotActive(data.is_auto_trading);
         } catch (err) {
@@ -28,8 +40,10 @@ export default function Dashboard() {
     const toggleBot = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/bot/toggle/1?status=${!botActive}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: getAuthHeaders()
             });
+            if (res.status === 401) return router.push('/login');
             const data = await res.json();
             setBotActive(data.status);
         } catch (err) {
@@ -38,13 +52,24 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
+        const token = localStorage.getItem('aura_token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+
         const fetchDashboardData = async () => {
             try {
-                const statsRes = await fetch(`${API_BASE_URL}/dashboard/stats`);
+                const statsRes = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+                    headers: getAuthHeaders()
+                });
+                if (statsRes.status === 401) return router.push('/login');
                 const statsData = await statsRes.json();
                 setStats(statsData);
 
-                const tradesRes = await fetch(`${API_BASE_URL}/dashboard/trades`);
+                const tradesRes = await fetch(`${API_BASE_URL}/dashboard/trades`, {
+                    headers: getAuthHeaders()
+                });
                 const tradesData = await tradesRes.json();
                 setTrades(tradesData);
 
@@ -57,7 +82,7 @@ export default function Dashboard() {
         };
 
         fetchDashboardData();
-        const interval = setInterval(fetchDashboardData, 5000); // Polling every 5s for "real-time" feel
+        const interval = setInterval(fetchDashboardData, 5000);
         return () => clearInterval(interval);
     }, []);
 

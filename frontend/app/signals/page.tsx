@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import { useRouter } from 'next/navigation';
 import { Zap, ArrowUpRight, ArrowDownRight, Info, Clock, CheckCircle2 } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -8,11 +9,28 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/a
 export default function SignalsPage() {
     const [signals, setSignals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
+        const token = localStorage.getItem('aura_token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+
+        const getAuthHeaders = () => {
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        };
+
         const fetchSignals = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/signals`);
+                const res = await fetch(`${API_BASE_URL}/signals`, {
+                    headers: getAuthHeaders()
+                });
+                if (res.status === 401) return router.push('/login');
                 const data = await res.json();
                 setSignals(Array.isArray(data) ? data : []);
                 setLoading(false);

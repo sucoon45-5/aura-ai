@@ -1,49 +1,72 @@
-import random
-from datetime import datetime, timedelta
+import ccxt
+from datetime import datetime
+from ai_engine.prediction_engine import PredictionEngine
+from ai_engine.indicators import TechnicalIndicators
+import pandas as pd
 
 class AnalysisService:
     @staticmethod
     def get_market_analysis(symbol: str):
-        # Mocking technical analysis data
-        return {
-            "symbol": symbol,
-            "price": 65120.50 if "BTC" in symbol else 3320.10,
-            "change_24h": 2.4,
-            "indicators": {
-                "rsi": random.randint(30, 70),
-                "macd": "bullish" if random.random() > 0.5 else "bearish",
-                "volume_score": random.uniform(0.1, 1.0)
-            },
-            "sentiment": {
-                "score": 0.72,
-                "label": "Greed",
-                "sources": {"reddit": "positive", "x": "neutral"}
+        """Fetch live ticker and technical indicators using CCXT."""
+        exchange = ccxt.binance()
+        try:
+            # 1. Fetch Ticker for live price
+            ticker = exchange.fetch_ticker(symbol)
+            
+            # 2. Fetch OHLCV for indicators
+            ohlcv = exchange.fetch_ohlcv(symbol, timeframe='1h', limit=50)
+            df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            
+            indicators = TechnicalIndicators()
+            df = indicators.add_rsi(df)
+            df = indicators.add_macd(df)
+            
+            last_row = df.iloc[-1]
+            
+            return {
+                "symbol": symbol,
+                "price": ticker['last'],
+                "change_24h": ticker['percentage'],
+                "indicators": {
+                    "rsi": round(float(last_row['rsi']), 2),
+                    "macd": "bullish" if last_row['macd'] > last_row['macd_signal'] else "bearish",
+                    "volume_score": round(float(ticker['quoteVolume'] / 100000000), 2) # Normalized volume score
+                },
+                "sentiment": {
+                    "score": 0.65, # Real sentiment would require a separate NLP service
+                    "label": "Greed" if ticker['percentage'] > 0 else "Fear",
+                    "sources": {"binance": "active"}
+                }
             }
-        }
+        except Exception as e:
+            print(f"Error fetching real data for {symbol}: {e}")
+            return {"error": str(e)}
 
 class SignalsService:
     @staticmethod
     def get_all_signals():
-        return [
-            {
-                "id": 1,
-                "symbol": "BTC/USDT",
-                "type": "buy",
-                "strength": 0.85,
-                "confidence": "High",
-                "logic": "RSI oversold + MACD crossover on 4H",
-                "timestamp": datetime.now().isoformat()
-            },
-            {
-                "id": 2,
-                "symbol": "PEPE/USDT",
-                "type": "buy",
-                "strength": 0.94,
-                "confidence": "MOONSHOT",
-                "logic": "Viral sentiment surge + whale accumulation",
-                "timestamp": (datetime.now() - timedelta(minutes=15)).isoformat()
-            }
-        ]
+        """Generate real signals using the AI PredictionEngine."""
+        engine = PredictionEngine()
+        symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT']
+        signals = []
+        
+        for i, symbol in enumerate(symbols):
+            try:
+                prediction = engine.predict(symbol)
+                if prediction:
+                    signals.append({
+                        "id": i + 1,
+                        "symbol": symbol,
+                        "type": prediction['prediction'].lower(),
+                        "strength": round(prediction['confidence'], 2),
+                        "confidence": "MOONSHOT" if prediction['confidence'] > 0.85 else "High",
+                        "logic": f"AI Engine detected {prediction['prediction']} trend with {int(prediction['confidence']*100)}% accuracy.",
+                        "timestamp": prediction['timestamp']
+                    })
+            except Exception as e:
+                print(f"Error generating signal for {symbol}: {e}")
+        
+        return signals
 
 class RiskService:
     _settings = {
