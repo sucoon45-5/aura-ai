@@ -1,0 +1,62 @@
+# AWS Deployment Guide - Aura AI
+
+This guide walks you through deploying the Aura AI platform on **AWS EC2** using **Docker Compose**. This is the recommended AWS path for running a 24/7 trading bot with full control.
+
+---
+
+## 🏗️ Phase 1: Infrastructure Setup
+### 1. Launch an EC2 Instance
+- **OS**: Ubuntu 22.04 LTS.
+- **Instance Type**: `t3.medium` (Recommended for AI engine RAM requirements) or `t3.small` (Minimum).
+- **Storage**: 20GB+ gp3 SSD.
+- **Key Pair**: Create or use an existing `.pem` key.
+
+### 2. Security Group Configuration
+Open the following ports:
+- **SSH (22)**: For server access.
+- **HTTP (80)** / **HTTPS (443)**: For the user dashboard.
+- **Custom TCP (3000, 8000)**: Optional, if testing without Nginx proxy.
+
+---
+
+## 🚀 Phase 2: One-Click Deployment
+I have provided an automation script [deploy.sh](file:///c:/Users/User/AI/deploy.sh) that handles the entire setup (System Updates, Docker, Permissions, and Launch).
+
+### 1. Transfer Project
+Use `scp` or `git clone` to get the project onto the EC2 instance.
+```bash
+scp -r -i your-key.pem ./AI ubuntu@your-ec2-ip:~/AuraAI
+```
+
+### 2. Run the Setup Script
+```bash
+cd ~/AuraAI
+chmod +x deploy.sh
+./deploy.sh
+```
+
+The script will automatically:
+1. Update system packages.
+2. Install Docker and Docker Compose.
+3. Configure your user permissions.
+4. Prepare your `.env` file.
+5. Launch all services in the background.
+
+---
+
+## 🛡️ Phase 4: Production Polish
+### 1. SSL & Nginx (Highly Recommended)
+Install Nginx and Certbot to serve the application over HTTPS:
+```bash
+sudo apt install nginx certbot python3-certbot-nginx
+```
+Configure Nginx to proxy `yourdomain.com` to `localhost:3000`.
+
+### 2. Persistence
+- **Elastic IP**: Assign a static IP to your instance so it doesn't change on reboot.
+- **CloudWatch**: Set up an alarm to reboot the instance if the AI Engine stops responding.
+
+---
+
+## 💰 Cost Optimization Tip
+Use **AWS Reserved Instances** or **Savings Plans** if you plan to run the bot 24/7 for a year to save ~30-40% on compute costs.
