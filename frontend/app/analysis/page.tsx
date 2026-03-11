@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Search, TrendingUp, TrendingDown, Activity, BarChart3, Globe } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function AnalysisPage() {
     const [symbol, setSymbol] = useState('BTC/USDT');
@@ -14,7 +14,12 @@ export default function AnalysisPage() {
         const fetchAnalysis = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`${API_BASE_URL}/analysis/${symbol.replace('/', '_')}`);
+                const token = localStorage.getItem('aura_token');
+                const res = await fetch(`${API_BASE_URL}/analysis/${symbol.replace('/', '_')}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (!res.ok) throw new Error('Analysis data not found');
                 const data = await res.json();
                 setAnalysis(data);

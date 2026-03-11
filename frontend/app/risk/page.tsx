@@ -3,14 +3,19 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { ShieldCheck, Octagon, Save, AlertTriangle, Info } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function RiskPage() {
     const [settings, setSettings] = useState<any>(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/risk/settings`)
+        const token = localStorage.getItem('aura_token');
+        fetch(`${API_BASE_URL}/risk/settings`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(res => res.json())
             .then(setSettings)
             .catch(err => console.error("Risk settings error:", err));
@@ -19,9 +24,13 @@ export default function RiskPage() {
     const handleUpdate = async () => {
         setSaving(true);
         try {
+            const token = localStorage.getItem('aura_token');
             await fetch(`${API_BASE_URL}/risk/settings`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(settings)
             });
             setTimeout(() => setSaving(false), 800);
