@@ -12,11 +12,15 @@ const Sidebar = () => {
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-card-border p-6 flex flex-col z-50">
-            <div className="text-xl font-bold tracking-tighter flex items-center gap-2 mb-10">
-                <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-                    <div className="w-4 h-4 bg-white rounded-sm rotate-45" />
+            <div className="flex items-center gap-3 mb-10">
+                <div className="w-10 h-10 relative overflow-hidden rounded-xl border border-card-border">
+                    <img
+                        src="/logo.png"
+                        alt="Aura AI Logo"
+                        className="w-full h-full object-cover"
+                    />
                 </div>
-                Aura AI
+                <span className="text-xl font-bold tracking-tighter">Aura AI</span>
             </div>
 
             <nav className="flex-1 space-y-2">

@@ -60,9 +60,13 @@ export default function LoginPage() {
             <div className="hidden lg:flex flex-col w-[45%] bg-card border-r border-card-border p-16 relative overflow-hidden">
                 <div className="absolute top-[-10%] right-[-10%] w-[100%] h-[100%] bg-accent/10 blur-[120px] rounded-full pointer-events-none" />
 
-                <div className="flex items-center gap-2 mb-20 relative z-10">
-                    <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-                        <div className="w-5 h-5 bg-white rounded-sm rotate-45" />
+                <div className="flex items-center gap-3 mb-20 relative z-10">
+                    <div className="w-12 h-12 relative overflow-hidden rounded-2xl border border-card-border shadow-2xl shadow-accent/20">
+                        <img
+                            src="/logo.png"
+                            alt="Aura AI Logo"
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                     <span className="text-2xl font-black tracking-tight">Aura AI</span>
                 </div>
