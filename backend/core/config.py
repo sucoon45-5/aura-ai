@@ -7,18 +7,24 @@ from pydantic_settings import BaseSettings
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-class Settings(BaseSettings):
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480 # 8 hours for better UX
-    RAW_DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/aura_db")
+from pydantic import field_validator
 
-    @property
-    def DATABASE_URL(self) -> str:
-        # SQLAlchemy 1.4+ requires 'postgresql://' instead of 'postgres://'
-        if self.RAW_DATABASE_URL.startswith("postgres://"):
-            return self.RAW_DATABASE_URL.replace("postgres://", "postgresql://", 1)
-        return self.RAW_DATABASE_URL
+class Settings(BaseSettings):
+    SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    DATABASE_URL: str = "postgresql://user:pass@localhost/aura_db"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_postgres_protocol(cls, v: str) -> str:
+        if isinstance(v, str) and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
 
 settings = Settings()
 
