@@ -106,6 +106,17 @@ export default function Dashboard() {
                                     Demo Mode
                                 </span>
                             )}
+                            {stats?.status === 'degraded' && (
+                                <span className="px-2 py-0.5 rounded-md bg-danger/10 text-danger text-[10px] font-black uppercase tracking-wider border border-danger/20">
+                                    Service Warning: Live Data Connectivity Issues
+                                </span>
+                            )}
+                            {stats?.status === 'live' && (
+                                <span className="px-2 py-0.5 rounded-md bg-success/10 text-success text-[10px] font-black uppercase tracking-wider border border-success/20 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-success rounded-full animate-pulse"></span>
+                                    Live
+                                </span>
+                            )}
                         </div>
                         <p className="text-muted">Welcome back! Your automated bot is running smoothly.</p>
                     </div>

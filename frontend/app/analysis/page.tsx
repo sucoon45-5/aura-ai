@@ -41,7 +41,20 @@ export default function AnalysisPage() {
             <main className="flex-1 ml-64 p-10">
                 <header className="flex justify-between items-center mb-10">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight mb-1">Market Analysis</h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-3xl font-bold tracking-tight">Market Analysis</h1>
+                            {analysis?.status === 'fallback' && (
+                                <span className="px-2 py-0.5 rounded-md bg-warning/10 text-warning text-[10px] font-black uppercase tracking-wider border border-warning/20">
+                                    Fallback Data
+                                </span>
+                            )}
+                            {analysis?.status === 'live' && (
+                                <span className="px-2 py-0.5 rounded-md bg-success/10 text-success text-[10px] font-black uppercase tracking-wider border border-success/20 flex items-center gap-1">
+                                    <span className="w-1 h-1 bg-success rounded-full animate-pulse"></span>
+                                    Live
+                                </span>
+                            )}
+                        </div>
                         <p className="text-muted">Deep dive into technical indicators and social sentiment.</p>
                     </div>
 

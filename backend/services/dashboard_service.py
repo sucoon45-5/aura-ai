@@ -37,34 +37,55 @@ class DashboardService:
 
             total_value = float(usdt_balance)
             yesterday_value = float(usdt_balance)
-            allocation = []
+            raw_holdings_data = []
+            status = "live"
             
             for holding in holdings:
                 try:
-                    ticker = exchange.fetch_ticker(holding['symbol'])
-                    price = float(ticker['last'])
+                    price = 0.0
+                    hist_price = 0.0
+                    
+                    try:
+                        ticker = exchange.fetch_ticker(holding['symbol'])
+                        price = float(ticker['last'])
+                        hist = exchange.fetch_ohlcv(holding['symbol'], timeframe='1h', limit=24)
+                        hist_price = float(hist[0][4]) if hist else price
+                    except Exception as eccxt:
+                        print(f"CCXT Fetch failed for {holding['symbol']}, using fallback metrics: {eccxt}")
+                        status = "degraded"
+                        # Fallback to realistic static prices if Binance is blocked
+                        fallbacks = {'BTC/USDT': 65000.0, 'ETH/USDT': 3500.0, 'SOL/USDT': 145.0}
+                        price = fallbacks.get(holding['symbol'], 100.0)
+                        hist_price = price * 0.98 # Assume 2% gain for demo fallback
                     
                     if holding['amount'] == 0 and not api_keys:
-                        # For Demo purposes, show "if you had 1 of these"
                         val = price
-                        hist_val = float(exchange.fetch_ohlcv(holding['symbol'], timeframe='1h', limit=24)[0][4])
+                        hist_val = hist_price
                     else:
                         val = float(holding['amount']) * price
-                        hist_val = float(exchange.fetch_ohlcv(holding['symbol'], timeframe='1h', limit=24)[0][4]) * float(holding['amount'])
+                        hist_val = hist_price * float(holding['amount'])
                     
                     total_value += val
                     yesterday_value += hist_val
                     
-                    if holding['amount'] > 0 or not api_keys:
-                        allocation.append({
-                            "name": holding['asset'],
-                            "symbol": holding['asset'],
-                            "value": f"{round((val/total_value if total_value > 0 else 0) * 100, 1)}%", 
-                            "color": "bg-accent" if holding['asset'] == 'BTC' else "bg-primary"
-                        })
+                    raw_holdings_data.append({
+                        "asset": holding['asset'],
+                        "value_usd": val
+                    })
                 except Exception as ex:
-                    print(f"Error processing asset {holding['symbol']}: {ex}")
+                    print(f"Critical error processing asset {holding['symbol']}: {ex}")
                     continue
+
+            # Calculate allocation percentages AFTER total_value is finalized
+            allocation = []
+            for h in raw_holdings_data:
+                pct = (h['value_usd'] / total_value * 100) if total_value > 0 else 0
+                allocation.append({
+                    "name": h['asset'],
+                    "symbol": h['asset'],
+                    "value": f"{round(pct, 1)}%",
+                    "color": "bg-accent" if h['asset'] == 'BTC' else "bg-primary"
+                })
 
             profit_24h = total_value - yesterday_value
             profit_pct = (profit_24h / yesterday_value) * 100 if yesterday_value > 0 else 0
@@ -77,6 +98,7 @@ class DashboardService:
                 "ai_confidence_avg": 88,
                 "trend": "up" if profit_pct >= 0 else "down",
                 "is_demo": not api_keys,
+                "status": status,
                 "allocation": allocation if allocation else [{"name": "No Data", "symbol": "None", "value": "100%", "color": "bg-muted"}]
             }
         except Exception as e:
