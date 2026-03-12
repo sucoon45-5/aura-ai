@@ -40,10 +40,13 @@ if env_url:
 
 # Add diagnostic logging for production
 print("--- ENVIRONMENT DIAGNOSTICS ---")
+print(f"PROCESS_ENV_KEYS: {list(os.environ.keys())}")
 print(f"DATABASE_URL Env Var Exists: {os.getenv('DATABASE_URL') is not None}")
-print(f"Final Config URL: {settings.DATABASE_URL[:20]}...") 
+if os.getenv('DATABASE_URL'):
+    print(f"Raw DATABASE_URL from os.getenv: {os.getenv('DATABASE_URL')[:20]}...")
+print(f"Final Config DATABASE_URL: {settings.DATABASE_URL[:20]}...") 
 db_host = settings.DATABASE_URL.split("@")[-1].split("/")[0] if "@" in settings.DATABASE_URL else "localhost"
-print(f"DATABASE HOST: {db_host}")
+print(f"PARSED DATABASE HOST: {db_host}")
 print("-------------------------------")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
