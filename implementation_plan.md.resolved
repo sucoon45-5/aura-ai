@@ -1,31 +1,68 @@
-# Core Feature Integration Plan
+# Real-Time Integration & Auth Fix Plan
 
-Now that Aura AI is deployed, we will transition it from a mock-based prototype to a functional trading platform by integrating the AI engine and a persistent database.
+We are moving from a mock-heavy prototype to a fully functional application by implementing real authentication and live market data.
 
 ## Proposed Changes
 
-### Backend: Database Layer
-- Implement `backend/database.py` to handle SQLAlchemy engine and sessions.
-- Un-comment and refine models in [backend/models/schemas.py](file:///c:/Users/User/AI/backend/models/schemas.py).
-- Integrate DB dependency into routes.
+### 1. Authentication System
+- **Backend ([backend/routes/auth.py](file:///c:/Users/User/AI/backend/routes/auth.py))**: 
+    - Enable database interaction in [register](file:///c:/Users/User/AI/backend/routes/auth.py#12-28) and [login](file:///c:/Users/User/AI/backend/routes/auth.py#29-47).
+    - Implement proper password hashing and verification.
+    - Return real JWT tokens.
+- **Frontend ([frontend/app/login/page.tsx](file:///c:/Users/User/AI/frontend/app/login/page.tsx))**:
+    - Add state for email and password.
+    - Implement [handleSubmit](file:///c:/Users/User/AI/frontend/app/login/page.tsx#17-56) to call backend auth endpoints.
+    - Store JWT in `localStorage` and redirect to dashboard on success.
 
-### AI Engine: Signals Integration
-- Update [backend/main.py](file:///c:/Users/User/AI/backend/main.py) to include a `/api/ai/predict/{symbol}` endpoint.
-- Connect the frontend "AI Signals" page to this endpoint.
+### 2. Real-Time Market Data
+- **Backend ([backend/services/market_services.py](file:///c:/Users/User/AI/backend/services/market_services.py))**:
+    - Integrate `ccxt` into [AnalysisService](file:///c:/Users/User/AI/backend/services/market_services.py#9-49) to fetch live ticker and indicator data.
+    - Update [SignalsService](file:///c:/Users/User/AI/backend/services/market_services.py#50-108) to generate signals using the [PredictionEngine](file:///c:/Users/User/AI/ai_engine/prediction_engine.py#10-81) instead of hardcoded lists.
+- **Backend ([backend/services/dashboard_service.py](file:///c:/Users/User/AI/backend/services/dashboard_service.py))**:
+    - Use live price data to calculate portfolio values.
 
-### Trading Bot: Live Control
-- Integrate [TradingCoordinator](file:///c:/Users/User/AI/backend/services/trading_coordinator.py#7-58) into the FastAPI app state.
-- Create endpoints to toggle auto-trading and view status.
+### 4. Production & Branding Hardening
+- **Global API URLs**:
+    - Audit and replace all `http://localhost:8000` instances with `API_BASE_URL` (derived from `NEXT_PUBLIC_API_URL`).
+    - Ensure all fetch calls include the `Authorization` header with the JWT token.
+### 6. Vercel Build Optimization
+- **Vercel Entry Point Fix**:
+    - Add a [vercel.json](file:///c:/Users/User/AI/vercel.json) to the root directory to explicitly tell Vercel to use the `frontend` directory for the Next.js build. This prevents Vercel from incorrectly detecting the project as a Python FastAPI app due to the root [requirements.txt](file:///c:/Users/User/AI/requirements.txt).
+    - Ensure [next.config.mjs](file:///c:/Users/User/AI/frontend/next.config.mjs) is optimized for production paths.
 
-### Frontend: Production Readiness
-- Replace hardcoded `http://localhost:8000` with an environment variable `NEXT_PUBLIC_API_URL`.
+### 7. Railway Migration
+- **Railway Configuration**:
+    - Add a [railway.json](file:///c:/Users/User/AI/railway.json) to the root directory to define the backend service.
+    - Set the start command to `python -m backend.main` to ensure the `ai_engine` module is correctly resolved from the project root.
+    - Configure Railway to use the existing [requirements.txt](file:///c:/Users/User/AI/requirements.txt) for dependencies.
+
+### 10. Database-Backed Real-Time Services
+Transition from hardcoded mocks to full database-backed operations.
+- **Risk Management**:
+    - [NEW] Add [RiskSettings](file:///c:/Users/User/AI/backend/models/schemas.py#70-81) table to [schemas.py](file:///c:/Users/User/AI/backend/models/schemas.py).
+    - Refactor [RiskService](file:///c:/Users/User/AI/backend/services/market_services.py#109-136) to persist settings per user in the database.
+- **Account Integration**:
+    - Refactor [DashboardService](file:///c:/Users/User/AI/backend/services/dashboard_service.py#5-118) to fetch user's encrypted API keys.
+    - Use live keys with `ccxt` to retrieve real account balances and holdings.
+- **Signal Persistence**:
+    - Periodically save AI-generated signals to the `market_signals` table.
+    - Update frontend to fetch signals from the database for historical review.
+
+### 11. Robust Data Fallbacks (Live/Offline Resiliency)
+Ensuring the UI reflects real-time data even if exchange APIs are unreachable.
+- **Fail-Safe Mode**: 
+    - Implement a `PseudoLive` fallback in [DashboardService](file:///c:/Users/User/AI/backend/services/dashboard_service.py#5-118) and [AnalysisService](file:///c:/Users/User/AI/backend/services/market_services.py#9-49). 
+    - If `ccxt` fails (e.g., binance connection error/IP block), use cached or realistic static data for Demo Mode instead of returning zeros.
+- **Allocation Logic**: Fix the bug in [DashboardService](file:///c:/Users/User/AI/backend/services/dashboard_service.py#5-118) where percentages are calculated before the total portfolio value is finalized.
+- **Connectivity Status**: Add a `last_updated` or [status](file:///c:/Users/User/AI/backend/main.py#98-104) field to API responses so the frontend can display a "Live", "Cached", or "Service Warning" status to the user.
 
 ## Verification Plan
 
 ### Automated Tests
-- Run `pytest` on the `ai_engine` to ensure predictions still work with real data.
-- Add integration tests for the new API endpoints.
+- Run `git grep "localhost:8000"` to ensure zero hardcoded instances remain in the frontend.
+- Verify database migrations for new [RiskSettings](file:///c:/Users/User/AI/backend/models/schemas.py#70-81) table.
 
 ### Manual Verification
-1. Open the "AI Signals" page and verify it displays predictions based on live market data.
-2. Toggle the "Start Live Trading" button and verify the status update.
+1. Login with a test account.
+2. Configure Risk Settings and verify they persist after page refresh.
+3. Verify that the Dashboard displays real account data (if API keys are provided) or a "Connect API" prompt.

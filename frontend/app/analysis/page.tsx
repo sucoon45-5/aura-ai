@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Search, TrendingUp, TrendingDown, Activity, BarChart3, Globe } from 'lucide-react';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -33,6 +34,11 @@ export default function AnalysisPage() {
 
         fetchAnalysis();
     }, [symbol]);
+    const handleAction = (action: string) => {
+        toast.success(action, {
+            description: `Aura Engine is processing your request.`,
+        });
+    };
 
     return (
         <div className="flex min-h-screen">
@@ -117,9 +123,9 @@ export default function AnalysisPage() {
                                     Our LSTM-based neural network has analyzed the last 48 hours of price action for {symbol}.
                                     The model suggests a <span className="text-foreground font-bold italic">78% probability</span> of a breakout within the next 4 hours.
                                 </p>
-                                <div className="flex gap-4">
-                                    <button className="btn-primary flex-1">Open Long Position</button>
-                                    <button className="px-6 py-2.5 rounded-xl border border-card-border hover:bg-card transition-all font-bold">View Model Logic</button>
+                                <div className="flex gap-4 mt-8 pt-6 border-t border-card-border">
+                                    <button onClick={() => handleAction('Position Opened: Long BTC/USDT')} className="btn-primary flex-1">Open Long Position</button>
+                                    <button onClick={() => handleAction('Loading Model Logic Parameters...')} className="px-6 py-2.5 rounded-xl border border-card-border hover:bg-card transition-all font-bold">View Model Logic</button>
                                 </div>
                             </div>
                         </div>

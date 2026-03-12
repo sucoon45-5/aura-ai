@@ -2,10 +2,17 @@
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { User, Key, Bell, Palette, Lock, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('profile');
     const [showKey, setShowKey] = useState(false);
+
+    const handleAction = (action: string) => {
+        toast.success(action, {
+            description: `Your settings have been updated successfully.`,
+        });
+    };
 
     const sections = [
         { id: 'profile', icon: <User size={20} />, label: 'Profile Settings' },
@@ -59,7 +66,7 @@ export default function SettingsPage() {
                                         <input type="email" defaultValue="aura@example.com" className="input-field" placeholder="Email" />
                                     </div>
                                 </div>
-                                <button className="btn-primary">Update Profile</button>
+                                <button onClick={() => handleAction('Profile Updated')} className="btn-primary">Update Profile</button>
                             </div>
                         )}
 
@@ -67,7 +74,7 @@ export default function SettingsPage() {
                             <div className="space-y-8 animate-in fade-in duration-300">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-2xl font-bold">Exchange API Connections</h3>
-                                    <button className="text-accent font-black text-sm hover:underline">+ Link New Exchange</button>
+                                    <button onClick={() => handleAction('Redirecting to Exchange Linking...')} className="text-accent font-black text-sm hover:underline">+ Link New Exchange</button>
                                 </div>
 
                                 <div className="space-y-4">
@@ -82,7 +89,7 @@ export default function SettingsPage() {
                                                     <p className="text-[10px] text-success uppercase font-black">Connected Successfully</p>
                                                 </div>
                                             </div>
-                                            <button className="text-danger text-xs font-bold hover:underline">Disconnect</button>
+                                            <button onClick={() => handleAction('Disconnecting Exchange...')} className="text-danger text-xs font-bold hover:underline">Disconnect</button>
                                         </div>
                                         <div className="space-y-4">
                                             <div className="space-y-1">

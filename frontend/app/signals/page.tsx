@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { useRouter } from 'next/navigation';
 import { Zap, ArrowUpRight, ArrowDownRight, Info, Clock, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -10,6 +11,12 @@ export default function SignalsPage() {
     const [signals, setSignals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    const handleAction = (action: string) => {
+        toast.info(action, {
+            description: `Aura Engine is preparing this action...`,
+        });
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('aura_token');
@@ -87,10 +94,10 @@ export default function SignalsPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-3 min-w-[200px] w-full md:w-auto">
-                                    <button className="btn-primary flex items-center justify-center gap-2">
+                                    <button onClick={() => handleAction(`Executing trade for ${signal.symbol}`)} className="btn-primary flex items-center justify-center gap-2">
                                         Execute Signal
                                     </button>
-                                    <button className="px-4 py-2 rounded-xl text-sm font-bold border border-card-border hover:bg-card flex items-center justify-center gap-2 transition-all text-muted">
+                                    <button onClick={() => handleAction(`Loading full report for ${signal.symbol}`)} className="px-4 py-2 rounded-xl text-sm font-bold border border-card-border hover:bg-card flex items-center justify-center gap-2 transition-all text-muted">
                                         <Info size={16} />
                                         Full Report
                                     </button>

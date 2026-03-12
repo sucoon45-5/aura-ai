@@ -1,5 +1,5 @@
 "use client";
-import { LayoutDashboard, TrendingUp, ShieldAlert, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, ShieldAlert, Settings, LogOut, Zap, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -15,9 +15,11 @@ const Sidebar = () => {
         { icon: <LayoutDashboard size={20} />, label: 'Overview', href: '/dashboard' },
         { icon: <TrendingUp size={20} />, label: 'Market Analysis', href: '/analysis' },
         { icon: <Zap size={20} />, label: 'AI Signals', href: '/signals' },
+        { icon: <Wallet size={20} />, label: 'Wallet', href: '/wallet' },
         { icon: <ShieldAlert size={20} />, label: 'Risk Manager', href: '/risk' },
         { icon: <Settings size={20} />, label: 'Settings', href: '/settings' },
     ];
+
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-card-border p-6 flex flex-col z-50">

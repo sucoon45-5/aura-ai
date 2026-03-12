@@ -6,6 +6,7 @@ import StatCard from '@/components/StatCard';
 import TradeCard from '@/components/TradeCard';
 import PerformanceChart from '@/components/PerformanceChart';
 import { Zap, Bell, Search, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -50,6 +51,12 @@ export default function Dashboard() {
         } catch (err) {
             console.error("Failed to toggle bot");
         }
+    };
+
+    const handleAction = (action: string) => {
+        toast.info(action, {
+            description: `This feature is processing your request...`,
+        });
     };
 
     useEffect(() => {
@@ -130,11 +137,11 @@ export default function Dashboard() {
                                 className="bg-card border border-card-border rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-accent transition-all w-64"
                             />
                         </div>
-                        <button className="p-2.5 rounded-xl border border-card-border hover:bg-card transition-all relative">
+                        <button onClick={() => handleAction('Notifications Center')} className="p-2.5 rounded-xl border border-card-border hover:bg-card transition-all relative">
                             <Bell size={20} className="text-muted" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full border-2 border-background"></span>
                         </button>
-                        <button className="btn-primary flex items-center gap-2">
+                        <button onClick={() => router.push('/signals')} className="btn-primary flex items-center gap-2">
                             <Plus size={20} />
                             <span>New Trade</span>
                         </button>
@@ -193,7 +200,7 @@ export default function Dashboard() {
                                 </div>
                             ))}
                         </div>
-                        <button className="mt-8 text-accent text-sm font-bold flex items-center gap-2 hover:underline">
+                        <button onClick={() => handleAction('Detailed Allocation View')} className="mt-8 text-accent text-sm font-bold flex items-center gap-2 hover:underline">
                             View Detailed Allocation Overview
                         </button>
                     </div>
