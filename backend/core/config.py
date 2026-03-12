@@ -3,17 +3,20 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic_settings import BaseSettings
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-
-from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
     DATABASE_URL: str = "postgresql://user:pass@localhost/aura_db"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -22,15 +25,15 @@ class Settings(BaseSettings):
             return v.replace("postgres://", "postgresql://", 1)
         return v
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
 settings = Settings()
 
 # Add diagnostic logging for production
+print("--- ENVIRONMENT DIAGNOSTICS ---")
+print(f"DATABASE_URL Env Var Exists: {os.getenv('DATABASE_URL') is not None}")
+print(f"Final Config URL: {settings.DATABASE_URL[:20]}...") 
 db_host = settings.DATABASE_URL.split("@")[-1].split("/")[0] if "@" in settings.DATABASE_URL else "localhost"
-print(f"DATABASE DIAGNOSTIC: Connecting to host: {db_host}")
+print(f"DATABASE HOST: {db_host}")
+print("-------------------------------")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
