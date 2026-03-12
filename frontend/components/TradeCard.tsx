@@ -1,7 +1,14 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { toast } from 'sonner';
 
 const TradeCard = ({ symbol, side, entry, current, pnl, status }: any) => {
     const isProfit = pnl >= 0;
+
+    const handleManage = () => {
+        toast.info(`Managing ${symbol}`, {
+            description: `Opening advanced terminal for ${side.toUpperCase()} position.`
+        });
+    };
 
     return (
         <div className="glass-card hover:translate-y-[-2px]">
@@ -31,7 +38,7 @@ const TradeCard = ({ symbol, side, entry, current, pnl, status }: any) => {
 
             <div className="mt-4 pt-4 border-t border-card-border flex justify-between items-center text-xs">
                 <span className="text-muted italic">{status}</span>
-                <button className="text-accent font-semibold hover:underline">Manage</button>
+                <button onClick={handleManage} className="text-accent font-semibold hover:underline">Manage</button>
             </div>
         </div>
     );

@@ -8,6 +8,11 @@ export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('profile');
     const [showKey, setShowKey] = useState(false);
 
+    // UI State for new sections
+    const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+    const [notifications, setNotifications] = useState({ trades: true, security: true, daily: false });
+    const [theme, setTheme] = useState('dark');
+
     const handleAction = (action: string) => {
         toast.success(action, {
             description: `Your settings have been updated successfully.`,
@@ -112,11 +117,96 @@ export default function SettingsPage() {
                             </div>
                         )}
 
-                        {activeSection !== 'profile' && activeSection !== 'exchanges' && (
-                            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-50">
-                                <Palette size={48} className="text-muted" />
-                                <h3 className="text-xl font-bold">Section Coming Soon</h3>
-                                <p className="text-muted text-sm max-w-xs">We are currently building this settings module to give you more control.</p>
+                        {activeSection === 'security' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                <h3 className="text-2xl font-bold">Security & 2FA</h3>
+
+                                <div className="space-y-6">
+                                    <div className="p-6 bg-card border border-card-border rounded-2xl flex justify-between items-center">
+                                        <div>
+                                            <h4 className="font-bold text-lg mb-1">Two-Factor Authentication (2FA)</h4>
+                                            <p className="text-sm text-muted">Secure your account with an additional layer of security using Google Authenticator.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setTwoFAEnabled(!twoFAEnabled);
+                                                handleAction(twoFAEnabled ? '2FA Disabled' : '2FA Enabled');
+                                            }}
+                                            className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${twoFAEnabled ? 'bg-success' : 'bg-card-border'}`}
+                                        >
+                                            <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${twoFAEnabled ? 'translate-x-9' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    <div className="p-6 bg-card border border-card-border rounded-2xl space-y-4">
+                                        <h4 className="font-bold text-lg">Change Password</h4>
+                                        <div className="space-y-4">
+                                            <input type="password" placeholder="Current Password" className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-sm focus:border-accent outline-none" />
+                                            <input type="password" placeholder="New Password" className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-sm focus:border-accent outline-none" />
+                                            <input type="password" placeholder="Confirm New Password" className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-sm focus:border-accent outline-none" />
+                                            <button onClick={() => handleAction('Password Updated')} className="btn-primary mt-2">Update Password</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'notifications' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                <h3 className="text-2xl font-bold">Notification Preferences</h3>
+
+                                <div className="space-y-4">
+                                    {[
+                                        { id: 'trades', label: 'Trade Executions', desc: 'Get notified when a trade is opened or closed by the bot.' },
+                                        { id: 'security', label: 'Security Alerts', desc: 'Critical alerts regarding account access and API key usage.' },
+                                        { id: 'daily', label: 'Daily Summary', desc: 'Receive a daily email summarizing your portfolio performance.' }
+                                    ].map((opt) => (
+                                        <div key={opt.id} className="p-6 bg-card border border-card-border rounded-2xl flex justify-between items-center hover:border-accent/30 transition-colors">
+                                            <div>
+                                                <h4 className="font-bold mb-1">{opt.label}</h4>
+                                                <p className="text-sm text-muted">{opt.desc}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const newState = { ...notifications, [opt.id]: !notifications[opt.id as keyof typeof notifications] };
+                                                    setNotifications(newState);
+                                                    handleAction(`Notification preference updated`);
+                                                }}
+                                                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${notifications[opt.id as keyof typeof notifications] ? 'bg-success' : 'bg-card-border'}`}
+                                            >
+                                                <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${notifications[opt.id as keyof typeof notifications] ? 'translate-x-9' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'appearance' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                <h3 className="text-2xl font-bold">Appearance</h3>
+
+                                <div className="p-6 bg-card border border-card-border rounded-2xl">
+                                    <h4 className="font-bold mb-4">Color Theme</h4>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {['System', 'Light', 'Dark'].map((t) => (
+                                            <button
+                                                key={t}
+                                                onClick={() => {
+                                                    setTheme(t.toLowerCase());
+                                                    handleAction(`Theme set to ${t}`);
+                                                }}
+                                                className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 font-bold transition-all ${theme === t.toLowerCase() ? 'border-accent bg-accent/10 text-accent ring-2 ring-accent/20' : 'border-card-border hover:border-accent/40'}`}
+                                            >
+                                                <Palette size={20} />
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-sm text-muted mt-6 flex items-center gap-2">
+                                        <Bell size={16} /> Aura AI uses a custom Deep Dark theme by default for optimal trading focus.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>

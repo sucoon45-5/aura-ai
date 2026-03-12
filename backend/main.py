@@ -63,6 +63,36 @@ async def get_active_trades(db: Session = Depends(get_db), current_user: str = D
         raise HTTPException(status_code=404, detail="User not found")
     return DashboardService.get_active_trades(db, user.id)
 
+from pydantic import BaseModel
+import random
+
+class TradeRequest(BaseModel):
+    symbol: str
+    side: str
+    amount: float = 100.0
+
+@app.post("/api/trade/execute")
+async def execute_trade(req: TradeRequest, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    entry_price = 50000.0 if "BTC" in req.symbol else (2000.0 if "ETH" in req.symbol else random.uniform(0.1, 100.0))
+    
+    new_trade = schemas.Trade(
+        user_id=user.id,
+        symbol=req.symbol,
+        side=req.side,
+        entry_price=entry_price,
+        amount=req.amount,
+        status="open",
+        pnl=0.0
+    )
+    db.add(new_trade)
+    db.commit()
+    db.refresh(new_trade)
+    return {"message": "Trade executed successfully", "trade_id": new_trade.id}
+
 @app.get("/api/analysis/{symbol}")
 async def get_analysis(symbol: str, current_user: str = Depends(get_current_user)):
     return AnalysisService.get_market_analysis(symbol)

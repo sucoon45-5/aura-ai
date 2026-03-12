@@ -18,6 +18,41 @@ export default function SignalsPage() {
         });
     };
 
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('aura_token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    };
+
+    const executeTrade = async (symbol: string, side: string) => {
+        toast.loading(`Executing ${side} trade for ${symbol}...`, { id: 'execute-trade' });
+        try {
+            const res = await fetch(`${API_BASE_URL}/trade/execute`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ symbol, side, amount: 100.0 })
+            });
+            if (res.status === 401) {
+                router.push('/login');
+                toast.dismiss('execute-trade');
+                return;
+            }
+            if (!res.ok) throw new Error("Trade failed");
+
+            toast.success(`Trade Executed`, {
+                id: 'execute-trade',
+                description: `Successfully opened ${side.toUpperCase()} position on ${symbol}.`
+            });
+        } catch (err) {
+            toast.error(`Trade Failed`, {
+                id: 'execute-trade',
+                description: `Failed to open position on ${symbol}.`
+            });
+        }
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('aura_token');
         if (!token) {
@@ -94,7 +129,7 @@ export default function SignalsPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-3 min-w-[200px] w-full md:w-auto">
-                                    <button onClick={() => handleAction(`Executing trade for ${signal.symbol}`)} className="btn-primary flex items-center justify-center gap-2">
+                                    <button onClick={() => executeTrade(signal.symbol, signal.type)} className="btn-primary flex items-center justify-center gap-2">
                                         Execute Signal
                                     </button>
                                     <button onClick={() => handleAction(`Loading full report for ${signal.symbol}`)} className="px-4 py-2 rounded-xl text-sm font-bold border border-card-border hover:bg-card flex items-center justify-center gap-2 transition-all text-muted">

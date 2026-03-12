@@ -5,16 +5,41 @@ import { Wallet, ArrowUpRight, ArrowDownRight, RefreshCw, CreditCard, History } 
 import { toast } from 'sonner';
 
 export default function WalletPage() {
-    const [balance] = useState(145230.50);
-    const [assets] = useState([
+    const [balance, setBalance] = useState(145230.50);
+    const [assets, setAssets] = useState([
         { symbol: 'USDT', name: 'Tether', balance: 45000.00, value: 45000.00, color: 'text-success' },
         { symbol: 'BTC', name: 'Bitcoin', balance: 1.2, value: 85200.00, color: 'text-accent' },
         { symbol: 'ETH', name: 'Ethereum', balance: 4.5, value: 15030.50, color: 'text-primary' },
     ]);
+    const [transactions, setTransactions] = useState([
+        { id: 1, type: 'Withdrawal', amount: 500, status: 'Completed', time: 'Today, 14:20 PM' },
+        { id: 2, type: 'Deposit', amount: 1500, status: 'Completed', time: 'Yesterday, 09:15 AM' },
+        { id: 3, type: 'Withdrawal', amount: 200, status: 'Completed', time: 'Oct 24, 11:30 AM' },
+        { id: 4, type: 'Deposit', amount: 5000, status: 'Completed', time: 'Oct 21, 16:45 PM' }
+    ]);
 
     const handleAction = (action: string) => {
-        toast.success(`${action} Initiated`, {
-            description: `Your request to ${action.toLowerCase()} funds is being processed.`,
+        if (action === 'Deposit') {
+            const fakeAmount = 1000;
+            setBalance(prev => prev + fakeAmount);
+            setTransactions(prev => [{
+                id: Date.now(), type: 'Deposit', amount: fakeAmount, status: 'Completed', time: 'Just now'
+            }, ...prev]);
+        } else if (action === 'Withdraw') {
+            const fakeAmount = 500;
+            if (balance >= fakeAmount) {
+                setBalance(prev => prev - fakeAmount);
+                setTransactions(prev => [{
+                    id: Date.now(), type: 'Withdrawal', amount: fakeAmount, status: 'Completed', time: 'Just now'
+                }, ...prev]);
+            } else {
+                toast.error("Insufficient Funds", { description: "You don't have enough balance for this withdrawal." });
+                return;
+            }
+        }
+
+        toast.success(`${action} Successful`, {
+            description: `Your ${action.toLowerCase()} has been processed and your balance is updated.`,
         });
     };
 
@@ -97,22 +122,22 @@ export default function WalletPage() {
                             Recent Activity
                         </h3>
                         <div className="space-y-4">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="flex justify-between items-center py-3 border-b border-card-border/50 last:border-0">
+                            {transactions.map((tx) => (
+                                <div key={tx.id} className="flex justify-between items-center py-3 border-b border-card-border/50 last:border-0">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i % 2 === 0 ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
-                                            {i % 2 === 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.type === 'Withdrawal' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'}`}>
+                                            {tx.type === 'Withdrawal' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold">{i % 2 === 0 ? 'Withdrawal' : 'Deposit'}</p>
-                                            <p className="text-[10px] text-muted uppercase">Today, 14:{i}0 PM</p>
+                                            <p className="text-sm font-bold">{tx.type}</p>
+                                            <p className="text-[10px] text-muted uppercase">{tx.time}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className={`text-sm font-bold ${i % 2 === 0 ? '' : 'text-success'}`}>
-                                            {i % 2 === 0 ? '-' : '+'}${(i * 500).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        <p className={`text-sm font-bold ${tx.type === 'Withdrawal' ? '' : 'text-success'}`}>
+                                            {tx.type === 'Withdrawal' ? '-' : '+'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                         </p>
-                                        <p className="text-[10px] text-muted uppercase">Completed</p>
+                                        <p className="text-[10px] text-muted uppercase">{tx.status}</p>
                                     </div>
                                 </div>
                             ))}

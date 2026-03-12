@@ -35,9 +35,43 @@ export default function AnalysisPage() {
         fetchAnalysis();
     }, [symbol]);
     const handleAction = (action: string) => {
-        toast.success(action, {
+        toast.info(action, {
             description: `Aura Engine is processing your request.`,
         });
+    };
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('aura_token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    };
+
+    const executeTrade = async (side: string) => {
+        toast.loading(`Opening ${side} position for ${symbol}...`, { id: 'analysis-trade' });
+        try {
+            const res = await fetch(`${API_BASE_URL}/trade/execute`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ symbol, side, amount: 500.0 })
+            });
+            if (res.status === 401) {
+                toast.dismiss('analysis-trade');
+                return;
+            }
+            if (!res.ok) throw new Error("Trade failed");
+
+            toast.success(`Position Opened`, {
+                id: 'analysis-trade',
+                description: `Successfully opened ${side.toUpperCase()} position on ${symbol}.`
+            });
+        } catch (err) {
+            toast.error(`Trade Failed`, {
+                id: 'analysis-trade',
+                description: `Failed to open position on ${symbol}.`
+            });
+        }
     };
 
     return (
@@ -124,7 +158,7 @@ export default function AnalysisPage() {
                                     The model suggests a <span className="text-foreground font-bold italic">78% probability</span> of a breakout within the next 4 hours.
                                 </p>
                                 <div className="flex gap-4 mt-8 pt-6 border-t border-card-border">
-                                    <button onClick={() => handleAction('Position Opened: Long BTC/USDT')} className="btn-primary flex-1">Open Long Position</button>
+                                    <button onClick={() => executeTrade('buy')} className="btn-primary flex-1">Open Long Position</button>
                                     <button onClick={() => handleAction('Loading Model Logic Parameters...')} className="px-6 py-2.5 rounded-xl border border-card-border hover:bg-card transition-all font-bold">View Model Logic</button>
                                 </div>
                             </div>
