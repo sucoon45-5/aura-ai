@@ -99,7 +99,14 @@ export default function Dashboard() {
                 {/* Header */}
                 <header className="flex justify-between items-center mb-10">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight mb-1">Trading Overview</h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-3xl font-bold tracking-tight">Trading Overview</h1>
+                            {stats?.is_demo && (
+                                <span className="px-2 py-0.5 rounded-md bg-warning/10 text-warning text-[10px] font-black uppercase tracking-wider border border-warning/20">
+                                    Demo Mode
+                                </span>
+                            )}
+                        </div>
                         <p className="text-muted">Welcome back! Your automated bot is running smoothly.</p>
                     </div>
 

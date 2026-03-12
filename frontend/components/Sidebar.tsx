@@ -1,7 +1,16 @@
+"use client";
 import { LayoutDashboard, TrendingUp, ShieldAlert, Settings, LogOut, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const Sidebar = () => {
+    const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('aura_token');
+        router.push('/login');
+    };
+
     const menuItems = [
         { icon: <LayoutDashboard size={20} />, label: 'Overview', href: '/dashboard' },
         { icon: <TrendingUp size={20} />, label: 'Market Analysis', href: '/analysis' },
@@ -37,7 +46,10 @@ const Sidebar = () => {
             </nav>
 
             <div className="pt-6 border-t border-card-border mt-auto">
-                <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted hover:text-danger hover:bg-danger/5 transition-all w-full">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted hover:text-danger hover:bg-danger/5 transition-all w-full"
+                >
                     <LogOut size={20} />
                     <span className="font-medium">Logout</span>
                 </button>

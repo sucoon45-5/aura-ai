@@ -18,31 +18,30 @@ export default function SignalsPage() {
             return;
         }
 
-        const getAuthHeaders = () => {
-            return {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-        };
-
         const fetchSignals = async () => {
+            const token = localStorage.getItem('aura_token');
+            if (!token) return router.push('/login');
+
             try {
                 const res = await fetch(`${API_BASE_URL}/signals`, {
-                    headers: getAuthHeaders()
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 if (res.status === 401) return router.push('/login');
                 const data = await res.json();
                 setSignals(Array.isArray(data) ? data : []);
-                setLoading(false);
             } catch (error) {
                 console.error("Failed to fetch signals:", error);
-                setSignals([]);
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchSignals();
-    }, []);
+        const interval = setInterval(fetchSignals, 10000); // Live update every 10s
+        return () => clearInterval(interval);
+    }, [router]);
 
     return (
         <div className="flex min-h-screen">
