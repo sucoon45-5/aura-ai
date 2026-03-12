@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from backend.routes import auth, keys
 from backend.services.dashboard_service import DashboardService
 from backend.services.market_services import AnalysisService, SignalsService, RiskService
