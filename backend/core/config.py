@@ -9,10 +9,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
-    DATABASE_URL: str = "postgresql://user:pass@localhost/aura_db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/aura_db")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -29,6 +29,14 @@ class Settings(BaseSettings):
         return v
 
 settings = Settings()
+
+# Aggressive Fail-safe: Ensure os.environ ALWAYS wins over defaults
+env_url = os.getenv("DATABASE_URL")
+if env_url:
+    # Normalize before overriding
+    if env_url.startswith("postgres://"):
+        env_url = env_url.replace("postgres://", "postgresql://", 1)
+    settings.DATABASE_URL = env_url
 
 # Add diagnostic logging for production
 print("--- ENVIRONMENT DIAGNOSTICS ---")
