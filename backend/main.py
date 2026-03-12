@@ -36,33 +36,55 @@ app.include_router(keys.router)
 def read_root():
     return {"message": "Aura AI API is running"}
 
+from backend.models.schemas import User as DBUser
+from backend.models.schemas import APIKey as DBAPIKey
+
 @app.get("/api/dashboard/stats")
-async def get_stats(current_user: str = Depends(get_current_user)):
-    return DashboardService.get_portfolio_stats()
+async def get_dashboard_stats(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    api_keys = db.query(DBAPIKey).filter(DBAPIKey.user_id == user.id, DBAPIKey.is_active == True).all()
+    return DashboardService.get_portfolio_stats(api_keys)
 
 @app.get("/api/dashboard/performance")
-async def get_performance(current_user: str = Depends(get_current_user)):
-    return DashboardService.get_performance_data()
+async def get_performance(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return DashboardService.get_performance_data(db, user.id)
 
 @app.get("/api/dashboard/trades")
-async def get_trades(current_user: str = Depends(get_current_user)):
-    return DashboardService.get_active_trades()
+async def get_active_trades(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return DashboardService.get_active_trades(db, user.id)
 
 @app.get("/api/analysis/{symbol}")
 async def get_analysis(symbol: str, current_user: str = Depends(get_current_user)):
     return AnalysisService.get_market_analysis(symbol)
 
 @app.get("/api/signals")
-async def get_signals(current_user: str = Depends(get_current_user)):
-    return SignalsService.get_all_signals()
+async def get_signals(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    return SignalsService.get_all_signals(db)
+
+from backend.models.schemas import User as DBUser
 
 @app.get("/api/risk/settings")
-async def get_risk_settings(current_user: str = Depends(get_current_user)):
-    return RiskService.get_settings()
+async def get_risk_settings(db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return RiskService.get_settings(db, user.id)
 
 @app.post("/api/risk/settings")
-async def update_risk_settings(settings: dict, current_user: str = Depends(get_current_user)):
-    return RiskService.update_settings(settings)
+async def update_risk_settings(settings: dict, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    user = db.query(DBUser).filter(DBUser.email == current_user).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return RiskService.update_settings(db, user.id, settings)
 
 # AI & Bot Endpoints
 @app.get("/api/ai/predict/{symbol}")

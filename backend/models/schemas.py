@@ -66,3 +66,15 @@ class MemeCoinAlert(Base):
     volume_24h = Column(Float, nullable=True)
     risk_level = Column(String, nullable=False) # 'low', 'medium', 'high', 'moonshot'
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class RiskSettings(Base):
+    __tablename__ = "risk_settings"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    bot_enabled = Column(Boolean, default=True)
+    max_daily_loss = Column(Float, default=5.0)
+    default_stop_loss = Column(Float, default=2.0)
+    default_take_profit = Column(Float, default=6.0)
+    leverage = Column(Integer, default=10)
+    
+    user = relationship("User")

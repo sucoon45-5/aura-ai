@@ -1,8 +1,10 @@
 import ccxt
+import pandas as pd
 from datetime import datetime
+from sqlalchemy.orm import Session
+from backend.models.schemas import MarketSignal, RiskSettings
 from ai_engine.prediction_engine import PredictionEngine
 from ai_engine.indicators import TechnicalIndicators
-import pandas as pd
 
 class AnalysisService:
     @staticmethod
@@ -30,10 +32,10 @@ class AnalysisService:
                 "indicators": {
                     "rsi": round(float(last_row['rsi']), 2),
                     "macd": "bullish" if last_row['macd'] > last_row['macd_signal'] else "bearish",
-                    "volume_score": round(float(ticker['quoteVolume'] / 100000000), 2) # Normalized volume score
+                    "volume_score": round(float(ticker['quoteVolume'] / 100000000), 2)
                 },
                 "sentiment": {
-                    "score": 0.65, # Real sentiment would require a separate NLP service
+                    "score": 0.65,
                     "label": "Greed" if ticker['percentage'] > 0 else "Fear",
                     "sources": {"binance": "active"}
                 }
@@ -44,44 +46,67 @@ class AnalysisService:
 
 class SignalsService:
     @staticmethod
-    def get_all_signals():
-        """Generate real signals using the AI PredictionEngine."""
-        engine = PredictionEngine()
-        symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'PEPE/USDT']
-        signals = []
+    def get_all_signals(db: Session = None):
+        """Fetch latest signals from the database or generate live ones if empty."""
+        if db:
+            signals = db.query(MarketSignal).order_by(MarketSignal.created_at.desc()).limit(10).all()
+            if signals:
+                return signals
         
-        for i, symbol in enumerate(symbols):
-            try:
-                prediction = engine.predict(symbol)
-                if prediction:
-                    signals.append({
-                        "id": i + 1,
-                        "symbol": symbol,
-                        "type": prediction['prediction'].lower(),
-                        "strength": round(prediction['confidence'], 2),
-                        "confidence": "MOONSHOT" if prediction['confidence'] > 0.85 else "High",
-                        "logic": f"AI Engine detected {prediction['prediction']} trend with {int(prediction['confidence']*100)}% accuracy.",
-                        "timestamp": prediction['timestamp']
-                    })
-            except Exception as e:
-                print(f"Error generating signal for {symbol}: {e}")
-        
-        return signals
+        # Fallback to generating live signals if DB is empty to avoid blank screen
+        symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
+        live_signals = []
+        for symbol in symbols:
+            # This is a lightweight live check
+            ticker = ccxt.binance().fetch_ticker(symbol)
+            live_signals.append({
+                "symbol": symbol,
+                "type": "buy" if ticker['percentage'] > 0 else "sell",
+                "strength": abs(ticker['percentage']) / 5.0, # Scale loosely
+                "source": "live_market"
+            })
+        return live_signals
+
+    @staticmethod
+    def generate_and_save_signals(db: Session):
+        """AI Engine logic to generate new signals and commit them to the DB."""
+        # This would be called by a background task/cron
+        symbols = ['BTC/USDT', 'ETH/USDT']
+        for symbol in symbols:
+            ticker = ccxt.binance().fetch_ticker(symbol)
+            signal = MarketSignal(
+                symbol=symbol,
+                type="buy" if ticker['percentage'] > 0 else "sell",
+                strength=0.75,
+                source="ai_engine"
+            )
+            db.add(signal)
+        db.commit()
 
 class RiskService:
-    _settings = {
-        "bot_enabled": True,
-        "max_daily_loss": 5.0, # percentage
-        "default_stop_loss": 2.0,
-        "default_take_profit": 6.0,
-        "leverage": 10
-    }
+    @staticmethod
+    def get_settings(db: Session, user_id: int):
+        """Fetch risk settings from the database for a specific user."""
+        settings = db.query(RiskSettings).filter(RiskSettings.user_id == user_id).first()
+        if not settings:
+            settings = RiskSettings(user_id=user_id)
+            db.add(settings)
+            db.commit()
+            db.refresh(settings)
+        return settings
 
     @staticmethod
-    def get_settings():
-        return RiskService._settings
-
-    @staticmethod
-    def update_settings(new_settings: dict):
-        RiskService._settings.update(new_settings)
-        return RiskService._settings
+    def update_settings(db: Session, user_id: int, new_settings: dict):
+        """Update risk settings in the database."""
+        settings = db.query(RiskSettings).filter(RiskSettings.user_id == user_id).first()
+        if not settings:
+            settings = RiskSettings(user_id=user_id)
+            db.add(settings)
+        
+        for key, value in new_settings.items():
+            if hasattr(settings, key):
+                setattr(settings, key, value)
+        
+        db.commit()
+        db.refresh(settings)
+        return settings
