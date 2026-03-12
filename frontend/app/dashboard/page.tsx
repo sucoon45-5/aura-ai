@@ -18,6 +18,22 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const mockForexTrades = [
+        { symbol: 'EUR/USD', side: 'buy', entry: 1.0542, current: 1.0610, pnl: 0.64, status: 'Active' },
+        { symbol: 'GBP/JPY', side: 'sell', entry: 188.50, current: 187.90, pnl: 0.31, status: 'Active' },
+        { symbol: 'USD/CAD', side: 'buy', entry: 1.3420, current: 1.3485, pnl: 0.48, status: 'Active' },
+        { symbol: 'AUD/USD', side: 'sell', entry: 0.6580, current: 0.6520, pnl: 0.91, status: 'Active' }
+    ];
+
+    const mockMemeTrades = [
+        { symbol: 'DOGE/USDT', side: 'buy', entry: 0.124, current: 0.150, pnl: 20.9, status: 'Active' },
+        { symbol: 'SHIB/USDT', side: 'buy', entry: 0.000021, current: 0.000028, pnl: 33.3, status: 'Active' },
+        { symbol: 'PEPE/USDT', side: 'buy', entry: 0.0000008, current: 0.0000010, pnl: 25.0, status: 'Active' },
+        { symbol: 'WIF/USDT', side: 'sell', entry: 2.50, current: 2.10, pnl: 16.0, status: 'Active' }
+    ];
+
+    const displayedTrades = activeTab === 'crypto' ? trades : activeTab === 'forex' ? mockForexTrades : mockMemeTrades;
+
     const getAuthHeaders = () => {
         const token = localStorage.getItem('aura_token');
         return {
@@ -244,6 +260,13 @@ export default function Dashboard() {
                             Forex
                             {activeTab === 'forex' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-accent"></div>}
                         </button>
+                        <button
+                            onClick={() => setActiveTab('meme')}
+                            className={`pb-3 font-semibold transition-all relative ${activeTab === 'meme' ? 'text-foreground' : 'text-muted hover:text-foreground'}`}
+                        >
+                            Meme Coins
+                            {activeTab === 'meme' && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-accent"></div>}
+                        </button>
                     </div>
                     <div className="text-sm text-muted">
                         Last updated: <span className="text-foreground font-medium">Real-time</span>
@@ -251,7 +274,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {trades.map((trade, i) => (
+                    {displayedTrades.map((trade, i) => (
                         <TradeCard key={i} {...trade} />
                     ))}
                 </div>
